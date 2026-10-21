@@ -6,7 +6,7 @@ export const fixtureSchedule: Schedule = {
   term: {
     id: "2026-fall",
     name: "Fall 2026",
-    timezone: "America/Toronto",
+    timezone: "America/New_York",
     startsOn: "2026-09-08",
     endsOn: "2026-12-08",
     closedRanges: [
@@ -16,9 +16,9 @@ export const fixtureSchedule: Schedule = {
   },
   source: { label: "Test timetable", accurateAsOf: "2026-09-07", file: "" },
   courses: [
-    { id: "mat101", code: "MAT101H5 F", name: "Calculus", color: "orange" },
-    { id: "csc101", code: "CSC101H5 F", name: "Programming", color: "blue" },
-    { id: "eng101", code: "ENG101H5 F", name: "Writing", color: "green" },
+    { id: "mat101", code: "MATH101", name: "Calculus", color: "orange" },
+    { id: "csc101", code: "CSCI101", name: "Programming", color: "blue" },
+    { id: "eng101", code: "ENGL101", name: "Writing", color: "green" },
   ],
   buildings: [
     { code: "SH", name: "South Hall", latitude: 40.0, longitude: -100.0 },

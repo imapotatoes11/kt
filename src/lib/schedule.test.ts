@@ -41,8 +41,8 @@ describe("schedule occurrences", () => {
     const state = fixtureState();
     const classes = getOccurrences(state, "2026-09-08", 1);
     expect(classes.map((item) => [item.course.code, item.startsAt, item.endsAt, `${item.building.code} ${item.room}`])).toEqual([
-      ["MAT101H5 F", "09:00", "11:00", "NH 200"],
-      ["MAT101H5 F", "14:00", "15:00", "NH 235"],
+      ["MATH101", "09:00", "11:00", "NH 200"],
+      ["MATH101", "14:00", "15:00", "NH 235"],
     ]);
   });
 
@@ -91,8 +91,8 @@ describe("weekly timeline", () => {
 
     const tuesday = timeline.days.find((day) => day.day === 2)!;
     expect(tuesday.classes.map((entry) => [entry.courseCode, entry.startMinutes, entry.endMinutes])).toEqual([
-      ["MAT101H5 F", 540, 660],
-      ["MAT101H5 F", 840, 900],
+      ["MATH101", 540, 660],
+      ["MATH101", 840, 900],
     ]);
     expect(tuesday.gaps.map((gap) => [gap.minutes, gap.changesBuilding])).toEqual([[180, false]]);
 

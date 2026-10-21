@@ -107,7 +107,23 @@ export function AppRoot() {
 
   async function importTimetable(schedule: unknown) {
     await importSchedule(key, profileId, schedule);
+    // The saved timetable is what matters; a failed resync is reported
+    // separately so it never reads as a failed import.
+    let syncWarning = "";
+    try {
+      const result = await syncNotifications(key, profileId);
+      if (!result.ok) syncWarning = `${result.failed} notification operation${result.failed === 1 ? "" : "s"} failed`;
+    } catch (caught) {
+      syncWarning = caught instanceof Error ? caught.message : "Notification sync failed";
+    }
     await hydrateProfile(key, profileId);
+    if (syncWarning) {
+      setStatus("Saved · sync issue");
+      setError(`Timetable imported. ${syncWarning}`);
+    } else {
+      setStatus("Saved");
+      setError("");
+    }
   }
 
   async function switchProfile(nextProfileId: ProfileId) {
