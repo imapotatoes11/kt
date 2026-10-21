@@ -1,6 +1,6 @@
-# Timetable
+# kt
 
-A self-hosted class timetable control room: next class, live class progress, temporary cancellations and moves, between-class gaps, weather-adjusted walking time, and ntfy push notifications. It is a responsive installable PWA, not a public landing page.
+kt is a self-hosted class timetable control room: next class, live class progress, temporary cancellations and moves, between-class gaps, weather-adjusted walking time, and ntfy push notifications. It is a responsive installable PWA, not a public landing page.
 
 You bring the data: deploy it, connect a [Neon](https://neon.com) database, and import your schedule. The repository ships with no timetables or users.
 
