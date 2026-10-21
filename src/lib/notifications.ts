@@ -1,6 +1,6 @@
 import { addMinutes, subMinutes } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
-import { formatClock, getOccurrences, getPreviousOccurrence, UOFT_TIME_OFFSET_MINUTES } from "./schedule";
+import { formatClock, getOccurrences, getPreviousOccurrence } from "./schedule";
 import { getWeather } from "./weather";
 import type { AppState, Occurrence, PlannedNotification, ProfileId, SuperReminderOffset, WeatherSnapshot } from "./types";
 
@@ -92,7 +92,10 @@ function walkOrigin(state: AppState, occurrence: Occurrence, all: Occurrence[]) 
 export function baseWalkMinutes(state: AppState, occurrence: Occurrence, all: Occurrence[]) {
   const { walking } = state.settings;
   const origin = walkOrigin(state, occurrence, all);
-  if (occurrence.building.latitude == null || occurrence.building.longitude == null) {
+  if (
+    occurrence.building.latitude == null || occurrence.building.longitude == null
+    || origin.latitude == null || origin.longitude == null
+  ) {
     return { minutes: 5 + walking.doorBufferMinutes, origin: origin.label };
   }
   const distance = haversineMeters(origin.latitude, origin.longitude, occurrence.building.latitude, occurrence.building.longitude);
@@ -135,11 +138,11 @@ export async function buildPlan(
       let weather: WeatherSnapshot | null = null;
       let walkMinutes: number | undefined;
 
-      // Per-rule UofT time: aim at the real start (posted + 10 min) instead of the
-      // posted one. End-of-class rules are unaffected, so they ignore the flag.
-      const usesUoftTime = rule.uoftTime && rule.kind !== "before-end";
-      const startsAt = usesUoftTime
-        ? addMinutes(new Date(occurrence.start), UOFT_TIME_OFFSET_MINUTES)
+      // Per-rule delayed start: aim at the real start (posted + the configured
+      // offset) instead of the posted one. End-of-class rules are unaffected, so they ignore the flag.
+      const usesDelayedStart = rule.delayedStart && rule.kind !== "before-end";
+      const startsAt = usesDelayedStart
+        ? addMinutes(new Date(occurrence.start), state.settings.display.startOffsetMinutes)
         : new Date(occurrence.start);
 
       if (rule.kind === "leave") {
@@ -147,12 +150,12 @@ export async function buildPlan(
         if (rule.includeWeather) weather = await weatherRequests.get(occurrence.id) ?? null;
         walkMinutes = walk.minutes + weatherPenalty(state, weather);
         due = subMinutes(startsAt, walkMinutes + rule.minutes);
-        title = `Leave for ${occurrence.course.code.replace(" F", "")}`;
-        message = `${walkMinutes} min from ${walk.origin} · ${occurrence.building.code} ${occurrence.room} at ${formatClock(startsAt.toISOString(), state.schedule.term.timezone, state.settings.display.clock)}`;
+        title = `Leave for ${occurrence.course.code}`;
+        message = `${walkMinutes} min${walk.origin ? ` from ${walk.origin}` : ""} · ${occurrence.building.code} ${occurrence.room} at ${formatClock(startsAt.toISOString(), state.schedule.term.timezone, state.settings.display.clock)}`;
         if (rule.includeWeather) message += `\n${weatherCopy(weather)}`;
       } else if (rule.kind === "before-start") {
         due = subMinutes(startsAt, rule.minutes);
-        title = rule.label.replace(/class/i, occurrence.course.code.replace(" F", ""));
+        title = rule.label.replace(/class/i, occurrence.course.code);
       } else {
         due = subMinutes(new Date(occurrence.end), rule.minutes);
         title = rule.label;

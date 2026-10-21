@@ -8,7 +8,7 @@ const EXAMPLE = `{
   "term": { "id": "2026-fall", "name": "Fall 2026", "timezone": "America/Toronto", "startsOn": "2026-09-08", "endsOn": "2026-12-08", "closedRanges": [] },
   "source": { "label": "My timetable", "accurateAsOf": "2026-09-07", "file": "" },
   "courses": [{ "id": "abc101", "code": "ABC101", "name": "Intro", "color": "blue" }],
-  "buildings": [{ "code": "MN", "name": "Main", "latitude": 43.5486, "longitude": -79.6619 }],
+  "buildings": [{ "code": "MN", "name": "Main", "latitude": 40.0, "longitude": -100.0 }],
   "meetings": [{ "id": "abc101-mon", "courseId": "abc101", "day": 1, "startsAt": "10:00", "endsAt": "11:00", "section": "LEC0101", "building": "MN", "room": "1170", "mode": "in-person" }]
 }`;
 
@@ -50,7 +50,7 @@ export function ScheduleImport({ empty, onImport }: ScheduleImportProps) {
   const body = (
     <div className="grid gap-3 p-4">
       <p className="text-[0.82rem] text-muted">
-        Paste or upload a schedule JSON. Weekdays use <code>1</code> (Monday) to <code>5</code> (Friday); times are 24-hour <code>HH:mm</code>.
+        Paste or upload a schedule JSON. Weekdays use <code>1</code> (Monday) to <code>5</code> (Friday) — weekend classes are not supported; times are 24-hour <code>HH:mm</code>.
         Importing replaces this profile’s timetable and keeps its settings.
       </p>
       <input type="file" accept="application/json,.json" onChange={readFile} aria-label="Schedule JSON file" />

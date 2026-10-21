@@ -11,7 +11,7 @@ const notificationRule = z.object({
   includeWeather: z.boolean(),
   // Defaulted rather than required: rules saved before this flag existed are
   // still read back out of storage and sent here unchanged.
-  uoftTime: z.boolean().default(false),
+  delayedStart: z.boolean().default(false),
 });
 
 const superReminderOffset = z.union([
@@ -48,9 +48,9 @@ export const mutableStateSchema = z.object({
       rules: z.array(notificationRule).min(1).max(24),
     }),
     walking: z.object({
-      originLabel: z.string().min(1).max(100),
-      originLatitude: z.number().min(-90).max(90),
-      originLongitude: z.number().min(-180).max(180),
+      originLabel: z.string().max(100),
+      originLatitude: z.number().min(-90).max(90).nullable(),
+      originLongitude: z.number().min(-180).max(180).nullable(),
       speedUnit: z.enum(["m/min", "km/h", "min/km"]),
       metersPerMinute: z.number().min(30).max(180),
       routeMultiplier: z.number().min(1).max(3),
@@ -65,7 +65,8 @@ export const mutableStateSchema = z.object({
       accent: z.enum(["red", "orange", "yellow", "green", "blue", "purple", "pink"]).default("orange"),
       clock: z.enum(["12h", "24h"]),
       showCourseNames: z.boolean(),
-      uoftTime: z.boolean().default(false),
+      delayedStart: z.boolean().default(false),
+      startOffsetMinutes: z.number().int().min(0).max(60).default(10),
     }),
   }),
   exceptions: z.array(z.object({
@@ -122,7 +123,7 @@ export const scheduleSchema = z.object({
   meetings: z.array(z.object({
     id,
     courseId: id,
-    day: z.number().int().min(0).max(6),
+    day: z.number().int().min(1).max(5),
     startsAt: hhmm,
     endsAt: hhmm,
     section: z.string().max(30),

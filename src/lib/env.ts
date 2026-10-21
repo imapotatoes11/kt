@@ -19,17 +19,23 @@ function number(raw: string | undefined, fallback: number) {
   return raw?.trim() && Number.isFinite(value) ? value : fallback;
 }
 
-/** Defaults for the first-trip origin, overridable per deployment. */
+/**
+ * Defaults for the first-trip origin. Left unset (null) unless the deployment
+ * configures one, so nobody silently inherits somebody else's city.
+ */
 export function defaultWalkingOrigin() {
+  const latitude = number(process.env.DEFAULT_ORIGIN_LATITUDE, Number.NaN);
+  const longitude = number(process.env.DEFAULT_ORIGIN_LONGITUDE, Number.NaN);
+  const configured = Number.isFinite(latitude) && Number.isFinite(longitude);
   return {
-    originLabel: process.env.DEFAULT_ORIGIN_LABEL?.trim() || "Campus entrance",
-    originLatitude: number(process.env.DEFAULT_ORIGIN_LATITUDE, 43.6532),
-    originLongitude: number(process.env.DEFAULT_ORIGIN_LONGITUDE, -79.3832),
+    originLabel: configured ? process.env.DEFAULT_ORIGIN_LABEL?.trim() || "Home" : "",
+    originLatitude: configured ? latitude : null,
+    originLongitude: configured ? longitude : null,
   };
 }
 
 export function defaultTimezone() {
-  return process.env.DEFAULT_TIMEZONE?.trim() || "America/Toronto";
+  return process.env.DEFAULT_TIMEZONE?.trim() || "UTC";
 }
 
 export function defaultNtfyServer() {

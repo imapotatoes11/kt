@@ -81,8 +81,8 @@ describe("ntfy schedule sync", () => {
     state.settings.ntfy.topic = "private-test-topic";
     state.settings.notifications.rules = state.settings.notifications.rules.map((rule) => ({ ...rule, enabled: false }));
     state.superReminders = [{
-      id: "super-osap",
-      title: "Submit OSAP documents",
+      id: "super-aid",
+      title: "Submit financial aid forms",
       date: "2026-09-21",
       time: "15:00",
       offsets: [180, 120, 60, 30, 15, 10, 5],
@@ -95,7 +95,7 @@ describe("ntfy schedule sync", () => {
 
     expect(result).toMatchObject({ ok: true, scheduled: 7, failed: 0 });
     expect(written.scheduledNotifications).toHaveLength(7);
-    expect(written.scheduledNotifications.every((item) => item.title === "Submit OSAP documents")).toBe(true);
+    expect(written.scheduledNotifications.every((item) => item.title === "Submit financial aid forms")).toBe(true);
     expect(written.scheduledNotifications.every((item) => item.sequenceId.startsWith("tt-me-super-"))).toBe(true);
   });
 });

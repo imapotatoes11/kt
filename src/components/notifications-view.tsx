@@ -40,7 +40,7 @@ export function NotificationsView({ state, accessKey, profileId, onSave }: { sta
 
   function addRule() {
     const id = `rule-${crypto.randomUUID()}`;
-    setDraft((current) => ({ ...current, notifications: { ...current.notifications, rules: [...current.notifications.rules, { id, kind: "before-start", enabled: true, minutes: 20, label: "Class starts soon", includeWeather: false, uoftTime: false }] } }));
+    setDraft((current) => ({ ...current, notifications: { ...current.notifications, rules: [...current.notifications.rules, { id, kind: "before-start", enabled: true, minutes: 20, label: "Class starts soon", includeWeather: false, delayedStart: false }] } }));
   }
 
   async function save() {
@@ -99,7 +99,7 @@ export function NotificationsView({ state, accessKey, profileId, onSave }: { sta
             <div className={cx(field, "max-nav:col-start-3 max-nav:col-end-4")}><label htmlFor={`${rule.id}-minutes`} className={fieldLabel}>Minutes</label><input id={`${rule.id}-minutes`} type="number" min={0} max={180} value={rule.minutes} onChange={(event) => updateRule(rule.id, { minutes: Number(event.target.value) })} /></div>
             <div className="flex min-h-[38px] flex-wrap items-center gap-x-3 gap-y-1 self-center text-[0.72rem] text-muted max-wide:col-start-3 max-wide:col-end-4 max-nav:col-start-1 max-nav:col-end-3 max-nav:min-h-11">
               <label className="flex items-center gap-1.5 has-[:disabled]:opacity-50"><input type="checkbox" checked={rule.includeWeather} disabled={rule.kind !== "leave"} onChange={(event) => updateRule(rule.id, { includeWeather: event.target.checked })} />Weather</label>
-              <label className="flex items-center gap-1.5 has-[:disabled]:opacity-50" title="Aim this alert at the UofT start time — 10 minutes after the posted start."><input type="checkbox" checked={rule.uoftTime} disabled={rule.kind === "before-end"} onChange={(event) => updateRule(rule.id, { uoftTime: event.target.checked })} />UofT time</label>
+              <label className="flex items-center gap-1.5 has-[:disabled]:opacity-50" title="Aim this alert at the delayed start time — the posted start plus the start offset from Settings."><input type="checkbox" checked={rule.delayedStart} disabled={rule.kind === "before-end"} onChange={(event) => updateRule(rule.id, { delayedStart: event.target.checked })} />Delayed start</label>
             </div>
             <button className={cx(iconButtonDanger, "self-center max-wide:col-start-6 max-wide:row-start-1 max-nav:col-start-4 max-nav:row-start-1")} type="button" onClick={() => setDraft((current) => ({ ...current, notifications: { ...current.notifications, rules: current.notifications.rules.filter((item) => item.id !== rule.id) } }))} aria-label={`Delete ${rule.label}`}><Trash2 aria-hidden="true" /></button>
           </div>)}

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { hasAppAccess, hasNoAccessKeys, isValidAppKey, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/auth";
+import { createSessionToken, hasAppAccess, hasNoAccessKeys, isLoginBlocked, isValidAppKey, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/auth";
 import { mutableStateSchema } from "@/lib/schema";
 import { appName, isDatabaseConfigured } from "@/lib/env";
 import { PROFILES, profileIdFromRequest } from "@/lib/profiles";
@@ -9,6 +9,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+  if (isLoginBlocked(request)) return NextResponse.json({ error: "Too many failed attempts. Try again in a few minutes." }, { status: 429 });
   if (!hasAppAccess(request)) {
     const error = hasNoAccessKeys() ? "No access key is configured. Set APP_ACCESS_KEY in the environment." : "Invalid access key";
     return NextResponse.json({ error }, { status: 401 });
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
   });
   const headerKey = request.headers.get("x-app-key") ?? "";
   if (headerKey && isValidAppKey(headerKey)) {
-    response.cookies.set(SESSION_COOKIE, headerKey, {
+    response.cookies.set(SESSION_COOKIE, createSessionToken(headerKey), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

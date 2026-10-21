@@ -1,4 +1,4 @@
-import { neon } from "@neondatabase/serverless";
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 import { createDefaultState } from "./defaults";
 import { isDatabaseConfigured } from "./env";
 import { DEFAULT_PROFILE_ID } from "./profiles";
@@ -10,7 +10,7 @@ export class DatabaseNotConfiguredError extends Error {
   }
 }
 
-let ready: Promise<ReturnType<typeof neon>> | null = null;
+let ready: Promise<NeonQueryFunction<false, false>> | null = null;
 
 /** Opens the Neon connection and creates the table on first use. */
 function database() {
@@ -49,7 +49,7 @@ export function normalizeState(state: AppState | undefined, profileId: ProfileId
         // Rules are stored as a whole array, so a field added later has to be
         // backfilled here rather than by the spread above.
         rules: (state.settings?.notifications?.rules ?? defaults.settings.notifications.rules)
-          .map((rule) => ({ ...rule, uoftTime: rule.uoftTime ?? false })),
+          .map((rule) => ({ ...rule, delayedStart: rule.delayedStart ?? false })),
       },
       walking: { ...defaults.settings.walking, ...state.settings?.walking },
       display: { ...defaults.settings.display, ...state.settings?.display },

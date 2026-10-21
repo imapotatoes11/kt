@@ -4,7 +4,7 @@ import { useState } from "react";
 import { CalendarDays, History, Info, MapPin } from "lucide-react";
 import type { ClientState } from "@/lib/client-api";
 import type { Occurrence } from "@/lib/types";
-import { formatClock, shiftClock, UOFT_TIME_OFFSET_MINUTES } from "@/lib/schedule";
+import { formatClock, formatWallClock, shiftClock } from "@/lib/schedule";
 import { ScheduleGapsView } from "./schedule-gaps-view";
 import { ScheduleImport } from "./schedule-import";
 import {
@@ -36,11 +36,11 @@ export function ScheduleView({ state, occurrences, onImport }: { state: ClientSt
   // more than once inside the window.
   const changesByMeeting = new Map(occurrences.filter((item) => item.moved || item.cancelled).reverse().map((item) => [item.meetingId, item]));
 
-  const uoftTime = state.settings.display.uoftTime;
+  const delayedStart = state.settings.display.delayedStart;
   // A shifted start never runs past its own end.
   const displayStart = (startsAt: string, endsAt: string) => {
-    if (!uoftTime) return startsAt;
-    const shifted = shiftClock(startsAt, UOFT_TIME_OFFSET_MINUTES);
+    if (!delayedStart) return startsAt;
+    const shifted = shiftClock(startsAt, state.settings.display.startOffsetMinutes);
     return shifted < endsAt ? shifted : startsAt;
   };
   const changeDate = (date: string) => new Intl.DateTimeFormat("en-CA", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`));
@@ -59,7 +59,7 @@ export function ScheduleView({ state, occurrences, onImport }: { state: ClientSt
       {state.schedule.meetings.length === 0 && <ScheduleImport empty onImport={onImport} />}
 
       {view === "legacy" ? <>
-        <div className="flex min-h-[42px] items-center gap-2.5 rounded-input border border-accent-line bg-accent-soft px-3 py-[9px] text-[0.78rem] text-[color-mix(in_srgb,var(--accent)_75%,var(--ink))]"><Info aria-hidden="true" /><span>Classes run {changeDate(state.schedule.term.startsOn)}–{changeDate(state.schedule.term.endsOn)}. Closed dates are already excluded.{uoftTime ? " Start times show UofT time — 10 minutes after the posted start." : ""}</span></div>
+        <div className="flex min-h-[42px] items-center gap-2.5 rounded-input border border-accent-line bg-accent-soft px-3 py-[9px] text-[0.78rem] text-[color-mix(in_srgb,var(--accent)_75%,var(--ink))]"><Info aria-hidden="true" /><span>Classes run {changeDate(state.schedule.term.startsOn)}–{changeDate(state.schedule.term.endsOn)}. Closed dates are already excluded.{delayedStart ? ` Start times are shifted ${state.settings.display.startOffsetMinutes} minutes after the posted start.` : ""}</span></div>
 
         <section className="grid grid-cols-[repeat(5,minmax(170px,1fr))] gap-px overflow-hidden rounded-card border border-line bg-line max-wide:overflow-x-auto max-nav:grid-cols-1 max-nav:gap-2 max-nav:overflow-visible max-nav:border-0 max-nav:bg-transparent" aria-label="Weekly class schedule">
         {weekdays.map((weekday) => {
@@ -82,9 +82,9 @@ export function ScheduleView({ state, occurrences, onImport }: { state: ClientSt
                       {state.settings.display.showCourseNames && <p className="mt-1 min-h-8 text-[0.67rem] leading-[1.25] text-muted max-nav:min-h-0">{course.name}</p>}
                       <time className="mt-3 block text-[0.68rem]">
                         {changed?.moved ? <>
-                          <s className="text-faint no-underline opacity-70 line-through">{formatClock(`2026-09-07T${meeting.startsAt}:00-04:00`, timezone, state.settings.display.clock)}–{formatClock(`2026-09-07T${meeting.endsAt}:00-04:00`, timezone, state.settings.display.clock)}</s>
+                          <s className="text-faint no-underline opacity-70 line-through">{formatWallClock(meeting.startsAt, state.settings.display.clock)}–{formatWallClock(meeting.endsAt, state.settings.display.clock)}</s>
                           {" → "}{formatClock(changed.start, timezone, state.settings.display.clock)}–{formatClock(changed.end, timezone, state.settings.display.clock)}
-                        </> : <>{formatClock(`2026-09-07T${displayStart(meeting.startsAt, meeting.endsAt)}:00-04:00`, timezone, state.settings.display.clock)}–{formatClock(`2026-09-07T${meeting.endsAt}:00-04:00`, timezone, state.settings.display.clock)}</>}
+                        </> : <>{formatWallClock(displayStart(meeting.startsAt, meeting.endsAt), state.settings.display.clock)}–{formatWallClock(meeting.endsAt, state.settings.display.clock)}</>}
                       </time>
                       <p className="mt-1 flex items-center gap-[5px] text-[0.68rem] text-muted [&_svg]:size-3">
                         <MapPin aria-hidden="true" />

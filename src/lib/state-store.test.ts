@@ -8,37 +8,37 @@ import { fixtureState } from "./test-fixtures";
 import type { AppState } from "./types";
 
 /** Drops the flag the way state written by an older build would not have had it. */
-function withoutUoftTime<T extends { uoftTime: boolean }>(value: T) {
+function withoutDelayedStart<T extends { delayedStart: boolean }>(value: T) {
   const copy: Partial<T> = { ...value };
-  delete copy.uoftTime;
+  delete copy.delayedStart;
   return copy;
 }
 
 describe("settings added after a profile was stored", () => {
-  it("backfills UofT time on rules and display saved before the flag existed", () => {
+  it("backfills delayed start on rules and display saved before the flag existed", () => {
     const legacy = createDefaultState("me");
     // Simulate state written by an older build: the flags simply are not there.
     legacy.settings.notifications.rules = legacy.settings.notifications.rules
-      .map((rule) => withoutUoftTime(rule)) as typeof legacy.settings.notifications.rules;
-    legacy.settings.display = withoutUoftTime(legacy.settings.display) as typeof legacy.settings.display;
+      .map((rule) => withoutDelayedStart(rule)) as typeof legacy.settings.notifications.rules;
+    legacy.settings.display = withoutDelayedStart(legacy.settings.display) as typeof legacy.settings.display;
 
     const migrated = normalizeState(legacy, "me");
 
-    expect(migrated.settings.notifications.rules.map((rule) => rule.uoftTime))
+    expect(migrated.settings.notifications.rules.map((rule) => rule.delayedStart))
       .toEqual([false, false, false, false]);
-    expect(migrated.settings.display.uoftTime).toBe(false);
+    expect(migrated.settings.display.delayedStart).toBe(false);
   });
 
-  it("keeps an explicit UofT time choice through normalization", () => {
+  it("keeps an explicit delayed start choice through normalization", () => {
     const stored = createDefaultState("sam");
-    stored.settings.display.uoftTime = true;
-    stored.settings.notifications.rules[0].uoftTime = true;
+    stored.settings.display.delayedStart = true;
+    stored.settings.notifications.rules[0].delayedStart = true;
 
     const migrated = normalizeState(stored, "sam");
 
-    expect(migrated.settings.display.uoftTime).toBe(true);
-    expect(migrated.settings.notifications.rules[0].uoftTime).toBe(true);
-    expect(normalizeState(createDefaultState("me"), "me").settings.display.uoftTime).toBe(false);
+    expect(migrated.settings.display.delayedStart).toBe(true);
+    expect(migrated.settings.notifications.rules[0].delayedStart).toBe(true);
+    expect(normalizeState(createDefaultState("me"), "me").settings.display.delayedStart).toBe(false);
   });
 
   it("backfills an empty super-reminder list for older stored profiles", () => {
@@ -50,10 +50,10 @@ describe("settings added after a profile was stored", () => {
 });
 
 describe("saved state validation", () => {
-  it("accepts a payload whose rules predate the UofT time flag", () => {
+  it("accepts a payload whose rules predate the delayed start flag", () => {
     const state = createDefaultState("me");
-    const rules = state.settings.notifications.rules.map((rule) => withoutUoftTime(rule));
-    const display = withoutUoftTime(state.settings.display);
+    const rules = state.settings.notifications.rules.map((rule) => withoutDelayedStart(rule));
+    const display = withoutDelayedStart(state.settings.display);
 
     const parsed = mutableStateSchema.safeParse({
       settings: { ...state.settings, notifications: { ...state.settings.notifications, rules }, display },
@@ -61,15 +61,15 @@ describe("saved state validation", () => {
     });
 
     expect(parsed.success).toBe(true);
-    expect(parsed.data?.settings.display.uoftTime).toBe(false);
-    expect(parsed.data?.settings.notifications.rules.every((rule) => rule.uoftTime === false)).toBe(true);
+    expect(parsed.data?.settings.display.delayedStart).toBe(false);
+    expect(parsed.data?.settings.notifications.rules.every((rule) => rule.delayedStart === false)).toBe(true);
   });
 
   it("accepts valid super reminders and rejects unsupported lead times", () => {
     const state = createDefaultState("me");
     const reminder = {
-      id: "super-osap",
-      title: "Submit OSAP documents",
+      id: "super-aid",
+      title: "Submit financial aid forms",
       date: "2026-09-21",
       time: "15:00",
       offsets: [180, 120, 60, 30, 15, 10, 5],
@@ -197,6 +197,12 @@ describe("schedule import validation", () => {
     const result = scheduleSchema.safeParse(schedule);
     expect(result.success).toBe(false);
     expect(result.error?.issues.map((issue) => issue.message).join(" ")).toContain('Unknown course "nope"');
+  });
+
+  it("rejects weekend meetings, which the weekly views do not show", () => {
+    const schedule = fixtureState().schedule;
+    schedule.meetings[0] = { ...schedule.meetings[0], day: 6 };
+    expect(scheduleSchema.safeParse(schedule).success).toBe(false);
   });
 
   it("rejects a meeting that ends before it starts and an unknown timezone", () => {

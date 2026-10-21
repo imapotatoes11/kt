@@ -4,13 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, Columns3, Users } from "lucide-react";
 import { loadSchedules, type ClientState, type ProfileSchedule } from "@/lib/client-api";
 import {
-  formatClock,
+  formatWallClock,
   getDayRange,
   getLocalMoment,
   getSharedFreeWindows,
   getWeekTimeline,
   minutesToClock,
-  UOFT_TIME_OFFSET_MINUTES,
 } from "@/lib/schedule";
 import type { DayTimeline, ProfileId } from "@/lib/types";
 import {
@@ -43,8 +42,8 @@ export function CompareView({ state, accessKey }: { state: ClientState; accessKe
 
   const timezone = state.schedule.term.timezone;
   const clock = state.settings.display.clock;
-  const timeText = (value: string) => formatClock(`2026-09-07T${value}:00-04:00`, timezone, clock);
-  const startOffset = state.settings.display.uoftTime ? UOFT_TIME_OFFSET_MINUTES : 0;
+  const timeText = (value: string) => formatWallClock(value, clock);
+  const startOffset = state.settings.display.delayedStart ? state.settings.display.startOffsetMinutes : 0;
 
   useEffect(() => {
     const refresh = () => setNow(new Date());

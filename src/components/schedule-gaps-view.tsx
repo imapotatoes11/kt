@@ -3,13 +3,12 @@
 import { useEffect, useState } from "react";
 import type { ClientState } from "@/lib/client-api";
 import {
-  formatClock,
+  formatWallClock,
   getLocalMoment,
   getWeekDates,
   getWeekExceptions,
   getWeekTimeline,
   minutesToClock,
-  UOFT_TIME_OFFSET_MINUTES,
 } from "@/lib/schedule";
 import { cx, panel } from "./ui";
 import {
@@ -25,7 +24,7 @@ export function ScheduleGapsView({ state }: { state: ClientState }) {
   const [now, setNow] = useState<Date | null>(null);
   const timezone = state.schedule.term.timezone;
   const clock = state.settings.display.clock;
-  const timeText = (value: string) => formatClock(`2026-09-07T${value}:00-04:00`, timezone, clock);
+  const timeText = (value: string) => formatWallClock(value, clock);
 
   useEffect(() => {
     const refresh = () => setNow(new Date());
@@ -43,7 +42,7 @@ export function ScheduleGapsView({ state }: { state: ClientState }) {
   const weekExceptions = getWeekExceptions(state.schedule, state.exceptions, timezone, now ?? undefined);
   const timeline = getWeekTimeline(
     state.schedule,
-    state.settings.display.uoftTime ? UOFT_TIME_OFFSET_MINUTES : 0,
+    state.settings.display.delayedStart ? state.settings.display.startOffsetMinutes : 0,
     weekExceptions,
   );
   const { marks: hourMarks, totalHeight, offset } = timelineAxis(timeline.rangeStartMinutes, timeline.rangeEndMinutes);
@@ -75,7 +74,7 @@ export function ScheduleGapsView({ state }: { state: ClientState }) {
         <div>
           <p className="overline">Between classes</p>
           <h2 id="gap-title">Weekly gap map</h2>
-          <p>Every class drawn to scale with the open time between them, measured from one class ending to the next beginning.{state.settings.display.uoftTime ? " Start times show UofT time — 10 minutes after the posted start." : ""}</p>
+          <p>Every class drawn to scale with the open time between them, measured from one class ending to the next beginning.{state.settings.display.delayedStart ? ` Start times are shifted ${state.settings.display.startOffsetMinutes} minutes after the posted start.` : ""}</p>
         </div>
         <dl>
           {summary.map((item) => (

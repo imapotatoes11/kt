@@ -11,7 +11,7 @@ import { MiscView } from "./misc-view";
 import { SettingsView } from "./settings-view";
 import { SetupView } from "./setup-view";
 import { importSchedule, loadPlan, loadState, logoutSession, saveState, syncNotifications, type ClientState } from "@/lib/client-api";
-import { applyUoftTime } from "@/lib/schedule";
+import { applyStartOffset } from "@/lib/schedule";
 import type { Occurrence, PlannedNotification, ProfileId } from "@/lib/types";
 
 const KEY_STORAGE = "timetable-access-key";
@@ -27,6 +27,7 @@ export function AppRoot() {
   const [active, setActive] = useState<ViewId>("overview");
   const [status, setStatus] = useState("Locked");
   const [error, setError] = useState("");
+  const databaseReady = state?.database ?? false;
 
   const hydrateProfile = useCallback(async (candidate: string, nextProfileId: ProfileId) => {
     const next = await loadState(candidate, nextProfileId);
@@ -71,9 +72,7 @@ export function AppRoot() {
   }, [unlock]);
 
   useEffect(() => {
-    const databaseReady = state?.database ?? false;
-
-  if (!state) return;
+    if (!state) return;
     const root = document.documentElement;
     root.dataset.theme = state.settings.display.theme;
     root.dataset.accent = state.settings.display.accent;
@@ -126,11 +125,11 @@ export function AppRoot() {
     }
   }
 
-  // Display-only shift. The notification plan applies UofT time per rule on the
+  // Display-only shift. The notification plan applies the delayed start per rule on the
   // server, so it must keep working from the posted times.
   const displayOccurrences = useMemo(
-    () => applyUoftTime(occurrences, state?.settings.display.uoftTime ?? false),
-    [occurrences, state?.settings.display.uoftTime],
+    () => applyStartOffset(occurrences, state?.settings.display.delayedStart ? state.settings.display.startOffsetMinutes : 0),
+    [occurrences, state?.settings.display.delayedStart, state?.settings.display.startOffsetMinutes],
   );
 
   function logout() {

@@ -44,6 +44,18 @@ export function formatClock(iso: string, timezone: string, clock: "12h" | "24h")
   }).format(new Date(iso));
 }
 
+/**
+ * Formats an "HH:mm" wall-clock time for display. It is a pure clock-face
+ * conversion — no date, zone, or daylight-saving offset is involved, so a
+ * timetable imported for any timezone reads the same as it was written.
+ */
+export function formatWallClock(value: string, clock: "12h" | "24h") {
+  const [hours, minutes] = value.split(":").map(Number);
+  if (clock === "24h") return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  const suffix = hours < 12 ? "a.m." : "p.m.";
+  return `${hours % 12 || 12}:${String(minutes).padStart(2, "0")} ${suffix}`;
+}
+
 export function formatDayLabel(iso: string, timezone: string, reference = new Date()) {
   const target = getLocalDate(timezone, new Date(iso));
   const today = getLocalDate(timezone, reference);
@@ -136,13 +148,12 @@ export function minutesToClock(total: number) {
 }
 
 /**
- * "UofT time": a class posted for 09:00 actually starts at 09:10. The end time is
- * unchanged, so the class is ten minutes shorter and the gap before it ten minutes
+ * Delayed start: a class posted for 09:00 actually starts at 09:10 (offset 10).
+ * The end time is unchanged, so the class gets shorter and the gap before it
  * longer. Every consumer opts in explicitly — `getOccurrences` and the default
  * `getWeekTimeline` stay on posted times so notifications keep their own per-rule
  * control over this.
  */
-export const UOFT_TIME_OFFSET_MINUTES = 10;
 
 /** Shifts an "HH:MM" clock string, clamped to the day. */
 export function shiftClock(value: string, minutes: number) {
@@ -152,18 +163,18 @@ export function shiftClock(value: string, minutes: number) {
 }
 
 /**
- * Applies the UofT start shift to already-built occurrences for display. The
+ * Applies the start offset to already-built occurrences for display. The
  * occurrence id is untouched so notification-plan lookups still match, and a
  * class is never shifted past its own end.
  */
-export function applyUoftTime(occurrences: Occurrence[], enabled: boolean): Occurrence[] {
-  if (!enabled) return occurrences;
+export function applyStartOffset(occurrences: Occurrence[], offsetMinutes: number): Occurrence[] {
+  if (!offsetMinutes) return occurrences;
   return occurrences.map((occurrence) => {
-    const start = addMinutes(new Date(occurrence.start), UOFT_TIME_OFFSET_MINUTES);
+    const start = addMinutes(new Date(occurrence.start), offsetMinutes);
     if (start >= new Date(occurrence.end)) return occurrence;
     return {
       ...occurrence,
-      startsAt: shiftClock(occurrence.startsAt, UOFT_TIME_OFFSET_MINUTES),
+      startsAt: shiftClock(occurrence.startsAt, offsetMinutes),
       start: start.toISOString(),
     };
   });

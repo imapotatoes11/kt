@@ -89,8 +89,8 @@ export interface NotificationRule {
   minutes: number;
   label: string;
   includeWeather: boolean;
-  /** Fire relative to the UofT start time (posted start + 10 min). Start-based rules only. */
-  uoftTime: boolean;
+  /** Fire relative to the delayed start (posted start + the display start offset). Start-based rules only. */
+  delayedStart: boolean;
 }
 
 export interface Settings {
@@ -103,8 +103,9 @@ export interface Settings {
   };
   walking: {
     originLabel: string;
-    originLatitude: number;
-    originLongitude: number;
+    /** `null` until the user sets a first-trip origin; walks from it use a flat estimate. */
+    originLatitude: number | null;
+    originLongitude: number | null;
     speedUnit: "m/min" | "km/h" | "min/km";
     metersPerMinute: number;
     routeMultiplier: number;
@@ -119,8 +120,10 @@ export interface Settings {
     accent: AccentColor;
     clock: "12h" | "24h";
     showCourseNames: boolean;
-    /** Show class start times shifted to the UofT start (posted start + 10 min). */
-    uoftTime: boolean;
+    /** Show class start times shifted by `startOffsetMinutes`, for institutions whose classes start after the posted time. */
+    delayedStart: boolean;
+    /** How many minutes after the posted time classes really start. */
+    startOffsetMinutes: number;
   };
 }
 

@@ -116,7 +116,7 @@ export function SuperReminders({ reminders, timezone, clock, onChange }: SuperRe
       <form className="grid grid-cols-[minmax(220px,1.4fr)_150px_130px_auto] items-end gap-3.5 border-b border-line p-4 max-wide:grid-cols-[minmax(220px,1fr)_150px_130px] max-nav:grid-cols-2 max-xs:grid-cols-1" onSubmit={addReminder}>
         <div className={cx(field, "max-nav:col-span-2 max-xs:col-auto")}>
           <label htmlFor="super-reminder-name" className={fieldLabel}>What should ntfy remind you about?</label>
-          <input id="super-reminder-name" value={title} maxLength={120} required placeholder="Submit OSAP documents" onChange={(event) => { setTitle(event.target.value); setFeedback(""); }} />
+          <input id="super-reminder-name" value={title} maxLength={120} required placeholder="Submit financial aid forms" onChange={(event) => { setTitle(event.target.value); setFeedback(""); }} />
         </div>
         <div className={field}>
           <label htmlFor="super-reminder-date" className={fieldLabel}>Date</label>

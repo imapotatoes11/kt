@@ -1,18 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { buildPlan, stableSequenceId } from "./notifications";
 import {
-  applyUoftTime,
+  applyStartOffset,
   formatDayLabel,
   getDayRange,
   getLocalMoment,
   getOccurrences,
   getSharedFreeWindows,
   getWeekDates,
-  getWeeklyGaps,
   getWeekExceptions,
+  formatWallClock,
   getWeekTimeline,
   shiftClock,
-  UOFT_TIME_OFFSET_MINUTES,
 } from "./schedule";
 import { createDefaultState as createEmptyState } from "./defaults";
 import { fixtureState } from "./test-fixtures";
@@ -42,8 +41,8 @@ describe("schedule occurrences", () => {
     const state = fixtureState();
     const classes = getOccurrences(state, "2026-09-08", 1);
     expect(classes.map((item) => [item.course.code, item.startsAt, item.endsAt, `${item.building.code} ${item.room}`])).toEqual([
-      ["MAT101H5 F", "09:00", "11:00", "IB 200"],
-      ["MAT101H5 F", "14:00", "15:00", "IB 235"],
+      ["MAT101H5 F", "09:00", "11:00", "NH 200"],
+      ["MAT101H5 F", "14:00", "15:00", "NH 235"],
     ]);
   });
 
@@ -113,6 +112,15 @@ describe("weekly timeline", () => {
   });
 });
 
+describe("wall-clock formatting", () => {
+  it("formats an HH:mm time without any date or timezone", () => {
+    expect(formatWallClock("09:05", "12h")).toBe("9:05 a.m.");
+    expect(formatWallClock("00:30", "12h")).toBe("12:30 a.m.");
+    expect(formatWallClock("12:00", "12h")).toBe("12:00 p.m.");
+    expect(formatWallClock("15:45", "24h")).toBe("15:45");
+  });
+});
+
 describe("empty profile", () => {
   it("has no occurrences before a timetable is imported", () => {
     const state = createEmptyState();
@@ -120,7 +128,7 @@ describe("empty profile", () => {
   });
 });
 
-describe("UofT time", () => {
+describe("delayed start", () => {
   it("shifts a clock string without touching the rest of the day", () => {
     expect(shiftClock("09:00", 10)).toBe("09:10");
     expect(shiftClock("09:55", 10)).toBe("10:05");
@@ -130,7 +138,7 @@ describe("UofT time", () => {
   it("moves occurrence starts forward and leaves ends and ids alone", () => {
     const state = fixtureState();
     const posted = getOccurrences(state, "2026-09-08", 1);
-    const shifted = applyUoftTime(posted, true);
+    const shifted = applyStartOffset(posted, 10);
 
     expect(shifted.map((item) => item.startsAt)).toEqual(["09:10", "14:10"]);
     expect(shifted.map((item) => item.endsAt)).toEqual(posted.map((item) => item.endsAt));
@@ -142,13 +150,13 @@ describe("UofT time", () => {
   it("returns the untouched array when the toggle is off", () => {
     const state = fixtureState();
     const posted = getOccurrences(state, "2026-09-08", 1);
-    expect(applyUoftTime(posted, false)).toBe(posted);
+    expect(applyStartOffset(posted, 0)).toBe(posted);
   });
 
   it("shortens each class and lengthens the gap before it on the timeline", () => {
     const state = fixtureState();
     const posted = getWeekTimeline(state.schedule);
-    const shifted = getWeekTimeline(state.schedule, UOFT_TIME_OFFSET_MINUTES);
+    const shifted = getWeekTimeline(state.schedule, 10);
 
     const tuesday = shifted.days.find((day) => day.day === 2)!;
     expect(tuesday.classes.map((entry) => [entry.startsAt, entry.startMinutes, entry.endMinutes])).toEqual([
@@ -208,15 +216,15 @@ describe("comparing days across profiles", () => {
   });
 });
 
-describe("UofT time in the notification plan", () => {
+describe("delayed start in the notification plan", () => {
   it("moves start-based alerts later and leaves end-based ones alone", async () => {
     const state = fixtureState();
     state.settings.ntfy.topic = "test-topic";
     const posted = await buildPlan(state, "2026-09-08", 1, false);
 
-    const uoft = structuredClone(state);
-    for (const rule of uoft.settings.notifications.rules) rule.uoftTime = true;
-    const shifted = await buildPlan(uoft, "2026-09-08", 1, false);
+    const delayed = structuredClone(state);
+    for (const rule of delayed.settings.notifications.rules) rule.delayedStart = true;
+    const shifted = await buildPlan(delayed, "2026-09-08", 1, false);
 
     expect(shifted).toHaveLength(posted.length);
     const postedBySequence = new Map(posted.map((item) => [item.sequenceId, item]));
@@ -224,7 +232,7 @@ describe("UofT time in the notification plan", () => {
     for (const item of shifted) {
       const before = postedBySequence.get(item.sequenceId)!;
       const movedBy = (new Date(item.dueAt).getTime() - new Date(before.dueAt).getTime()) / 60_000;
-      expect(movedBy).toBe(item.kind === "before-end" ? 0 : UOFT_TIME_OFFSET_MINUTES);
+      expect(movedBy).toBe(item.kind === "before-end" ? 0 : 10);
     }
   });
 
@@ -233,9 +241,9 @@ describe("UofT time in the notification plan", () => {
     state.settings.ntfy.topic = "test-topic";
     const posted = await buildPlan(state, "2026-09-08", 1, false);
 
-    const uoft = structuredClone(state);
-    uoft.settings.notifications.rules.find((rule) => rule.id === "start-10")!.uoftTime = true;
-    const shifted = await buildPlan(uoft, "2026-09-08", 1, false);
+    const delayed = structuredClone(state);
+    delayed.settings.notifications.rules.find((rule) => rule.id === "start-10")!.delayedStart = true;
+    const shifted = await buildPlan(delayed, "2026-09-08", 1, false);
 
     const postedBySequence = new Map(posted.map((item) => [item.sequenceId, item]));
     const moved = shifted.filter((item) => item.dueAt !== postedBySequence.get(item.sequenceId)!.dueAt);
@@ -243,12 +251,12 @@ describe("UofT time in the notification plan", () => {
     expect(new Set(moved.map((item) => item.kind))).toEqual(new Set(["before-start"]));
   });
 
-  it("reports the UofT start time in the leave message", async () => {
+  it("reports the delayed start time in the leave message", async () => {
     const state = fixtureState();
     state.settings.ntfy.topic = "test-topic";
     state.settings.notifications.rules = state.settings.notifications.rules
       .filter((rule) => rule.kind === "leave")
-      .map((rule) => ({ ...rule, includeWeather: false, uoftTime: true }));
+      .map((rule) => ({ ...rule, includeWeather: false, delayedStart: true }));
 
     const [first] = await buildPlan(state, "2026-09-08", 1, false);
     expect(first.message).toContain("9:10");
@@ -297,7 +305,7 @@ describe("this week's exceptions on the recurring timeline", () => {
 
     state.exceptions = [{
       id: "moved-1", meetingId: tuesdayMeetings[0].id, date: thisWeek[2], kind: "moved",
-      startsAt: "10:00", endsAt: "12:00", building: "DH", room: "2072",
+      startsAt: "10:00", endsAt: "12:00", building: "EH", room: "2072",
       note: "Room double-booked", createdAt: "2026-09-01T00:00:00.000Z",
     }];
     const weekExceptions = getWeekExceptions(state.schedule, state.exceptions, state.schedule.term.timezone, new Date("2026-09-16T14:00:00.000Z"));
@@ -305,7 +313,7 @@ describe("this week's exceptions on the recurring timeline", () => {
     const tuesday = timeline.days.find((day) => day.day === 2)!;
 
     const moved = tuesday.classes.find((entry) => entry.meetingId === tuesdayMeetings[0].id)!;
-    expect(moved.exception).toEqual({ kind: "moved", note: "Room double-booked", startsAt: "10:00", endsAt: "12:00", building: "DH", room: "2072" });
+    expect(moved.exception).toEqual({ kind: "moved", note: "Room double-booked", startsAt: "10:00", endsAt: "12:00", building: "EH", room: "2072" });
     // The block itself stays put at the meeting's usual slot — only the text changes.
     expect(moved.startMinutes).toBe(9 * 60);
 

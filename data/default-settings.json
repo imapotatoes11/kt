@@ -9,16 +9,16 @@
     "quietStart": "22:30",
     "quietEnd": "07:00",
     "rules": [
-      { "id": "leave", "kind": "leave", "enabled": true, "minutes": 0, "label": "Time to leave", "includeWeather": true, "uoftTime": false },
-      { "id": "start-10", "kind": "before-start", "enabled": true, "minutes": 10, "label": "Class starts in 10 minutes", "includeWeather": false, "uoftTime": false },
-      { "id": "end-10", "kind": "before-end", "enabled": true, "minutes": 10, "label": "10 minutes left", "includeWeather": false, "uoftTime": false },
-      { "id": "end-5", "kind": "before-end", "enabled": true, "minutes": 5, "label": "5 minutes left", "includeWeather": false, "uoftTime": false }
+      { "id": "leave", "kind": "leave", "enabled": true, "minutes": 0, "label": "Time to leave", "includeWeather": true, "delayedStart": false },
+      { "id": "start-10", "kind": "before-start", "enabled": true, "minutes": 10, "label": "Class starts in 10 minutes", "includeWeather": false, "delayedStart": false },
+      { "id": "end-10", "kind": "before-end", "enabled": true, "minutes": 10, "label": "10 minutes left", "includeWeather": false, "delayedStart": false },
+      { "id": "end-5", "kind": "before-end", "enabled": true, "minutes": 5, "label": "5 minutes left", "includeWeather": false, "delayedStart": false }
     ]
   },
   "walking": {
-    "originLabel": "Campus entrance",
-    "originLatitude": 43.6532,
-    "originLongitude": -79.3832,
+    "originLabel": "",
+    "originLatitude": null,
+    "originLongitude": null,
     "speedUnit": "m/min",
     "metersPerMinute": 78,
     "routeMultiplier": 1.3,
@@ -33,6 +33,7 @@
     "accent": "orange",
     "clock": "12h",
     "showCourseNames": true,
-    "uoftTime": false
+    "delayedStart": false,
+    "startOffsetMinutes": 10
   }
 }

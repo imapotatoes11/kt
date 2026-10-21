@@ -21,15 +21,15 @@ export const fixtureSchedule: Schedule = {
     { id: "eng101", code: "ENG101H5 F", name: "Writing", color: "green" },
   ],
   buildings: [
-    { code: "MN", name: "Main", latitude: 43.54863, longitude: -79.66193 },
-    { code: "IB", name: "Instruction", latitude: 43.54956, longitude: -79.66371 },
-    { code: "DH", name: "Deerfield", latitude: 43.54785, longitude: -79.66172 },
+    { code: "SH", name: "South Hall", latitude: 40.0, longitude: -100.0 },
+    { code: "NH", name: "North Hall", latitude: 40.001, longitude: -100.0 },
+    { code: "EH", name: "East Hall", latitude: 40.0, longitude: -99.999 },
   ],
   meetings: [
-    { id: "mat101-lec-tue", courseId: "mat101", day: 2, startsAt: "09:00", endsAt: "11:00", section: "LEC0101", building: "IB", room: "200", mode: "in-person" },
-    { id: "mat101-tut-tue", courseId: "mat101", day: 2, startsAt: "14:00", endsAt: "15:00", section: "TUT0101", building: "IB", room: "235", mode: "in-person" },
-    { id: "csc101-lec-thu", courseId: "csc101", day: 4, startsAt: "10:00", endsAt: "11:30", section: "LEC0101", building: "MN", room: "1170", mode: "in-person" },
-    { id: "eng101-sem-thu", courseId: "eng101", day: 4, startsAt: "11:30", endsAt: "12:30", section: "SEM0101", building: "DH", room: "2020", mode: "in-person" },
+    { id: "mat101-lec-tue", courseId: "mat101", day: 2, startsAt: "09:00", endsAt: "11:00", section: "LEC0101", building: "NH", room: "200", mode: "in-person" },
+    { id: "mat101-tut-tue", courseId: "mat101", day: 2, startsAt: "14:00", endsAt: "15:00", section: "TUT0101", building: "NH", room: "235", mode: "in-person" },
+    { id: "csc101-lec-thu", courseId: "csc101", day: 4, startsAt: "10:00", endsAt: "11:30", section: "LEC0101", building: "SH", room: "1170", mode: "in-person" },
+    { id: "eng101-sem-thu", courseId: "eng101", day: 4, startsAt: "11:30", endsAt: "12:30", section: "SEM0101", building: "EH", room: "2020", mode: "in-person" },
   ],
 };
 
