@@ -1,0 +1,42 @@
+confirmModulesPurge: false
+allowBuilds:
+  esbuild: true
+  unrs-resolver: true
+
+# Force patched releases of vulnerable transitive packages, covering the open
+# Dependabot advisories.
+#
+# NOTE ON MATCHING: pnpm matches an override key against the range a dependent
+# *requests*, not against the version that would resolve. A key therefore
+# applies to any dependent whose requested range merely intersects it. The keys
+# below are deliberately bounded on both sides so each can only touch the major
+# line that is actually vulnerable — an unbounded "pkg@<x" key would also
+# capture dependents requesting older, already-patched majors and silently
+# force a major bump on them.
+#
+# Everything these keys actually replace is dev-only, reachable through the
+# `vercel` CLI devDependency (and `@vercel/fun` / `@vercel/node` beneath it).
+# undici is the one overridden package that also appears in the production
+# tree, via @vercel/blob, which requests "^6.23.0" — the undici key below stops
+# at <6.0.0 precisely so it cannot intersect that range. The shipped runtime is
+# untouched by this block.
+#
+# The undici key spans the whole 5.x line because those advisories are written
+# unbounded-below ("< 6.28.0"), so no 5.x release clears them. Two dependents
+# pinned 5.x exactly — `vercel` itself (5.29.0) and `@vercel/node` (5.28.4) —
+# and both are bumped across a major here.
+#
+# KNOWN GAP: path-to-regexp 7.x (7.0.0-7.2.0) is entirely vulnerable to
+# GHSA-9wv6-86v2-598j with no patched 7.x release; the fix is 8.0.0. Nothing in
+# the tree pulls 7.x today, so no advisory is masked, and it is left
+# unconstrained rather than silently force-bumped across a major.
+overrides:
+  "tar@>=7.0.0 <=7.5.20": "^7.5.22"
+  "undici@<6.0.0": "^6.28.1"
+  "js-yaml@>=4.0.0 <4.3.2": "^4.3.2"
+  "minimatch@>=10.0.0 <10.2.3": "^10.2.6"
+  "path-to-regexp@>=4.0.0 <6.3.0": "^6.3.0"
+  "path-to-regexp@>=8.0.0 <8.4.0": "^8.4.2"
+  "smol-toml@>=1.0.0 <=1.7.0": "^1.8.0"
+  "ajv@>=7.0.0-alpha.0 <8.18.0": "^8.20.0"
+  "@tootallnate/once@>=2.0.0 <2.0.1": "^2.0.1"

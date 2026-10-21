@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <style>.f{fill:#18181b}.b{fill:#fafafa}.a{fill:#ea580c}</style>
+  <rect width="48" height="48" class="f"/>
+  <g transform="translate(24 24) scale(0.82) translate(-24 -24)">
+  <rect x="9.5" y="13" width="7" height="22" rx="3.5" class="b"/>
+  <rect x="20.5" y="9" width="7" height="12" rx="3.5" class="b"/>
+  <rect x="20.5" y="27" width="7" height="12" rx="3.5" class="b"/>
+  <rect x="31.5" y="17" width="7" height="18" rx="3.5" class="a"/>
+  </g>
+</svg>
